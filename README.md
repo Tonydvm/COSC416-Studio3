@@ -1,7 +1,6 @@
 # Third Person Controller Assignment
 
 **Your Name:** Antonio Vazquez-Mackay
-**Date:** February 11, 2025
 
 ## Demo Video
 
