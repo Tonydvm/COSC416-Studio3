@@ -3,10 +3,22 @@ using TMPro;
 
 public class PlayerMovement : MonoBehaviour
 {
+    [Header("Movement")]
     public float moveSpeed = 5f;
+    public float rotationSpeed = 500f;
+
+    [Header("Jump")]
     public float jumpForce = 7f;
     public float gravityMultiplier = 2f;
-    public float rotationSpeed = 500f;
+    public int maxJumps = 2;
+    private int jumpsRemaining;
+
+    [Header("Dash")]
+    public float dashForce = 15f;
+    public float dashDuration = 0.2f;
+    private float dashTimer = 0f;
+    private bool isDashing = false;
+
 
     private CharacterController characterController;
     private Vector3 velocity;
@@ -40,6 +52,8 @@ public class PlayerMovement : MonoBehaviour
         {
             UpdateScoreUI();
         }
+
+        jumpsRemaining = maxJumps;
     }
 
     void Update()
@@ -66,14 +80,35 @@ public class PlayerMovement : MonoBehaviour
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
 
+        if (Input.GetButtonDown("Fire3") && !isDashing)
+        {
+            StartDash();
+        }
+
+        if (isDashing)
+        {
+            dashTimer += Time.deltaTime;
+            if (dashTimer >= dashDuration)
+            {
+                isDashing = false;
+                dashTimer = 0f;
+            }
+        }
+
+
         Vector3 horizontalVelocity = moveDirection * moveSpeed;
+        if (isDashing)
+        {
+            horizontalVelocity = moveDirection * dashForce;
+        }
         velocity.x = horizontalVelocity.x;
         velocity.z = horizontalVelocity.z;
 
 
-        if (isGrounded && Input.GetButtonDown("Jump"))
+        if (jumpsRemaining > 0 && Input.GetButtonDown("Jump"))
         {
             velocity.y = Mathf.Sqrt(jumpForce * -2f * gravity * gravityMultiplier);
+            jumpsRemaining--;
         }
 
         velocity.y += gravity * gravityMultiplier * Time.deltaTime;
@@ -92,6 +127,10 @@ public class PlayerMovement : MonoBehaviour
     void GroundCheck()
     {
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+        if (isGrounded)
+        {
+            jumpsRemaining = maxJumps;
+        }
     }
 
 
@@ -116,5 +155,11 @@ public class PlayerMovement : MonoBehaviour
 
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(groundCheck.position, groundDistance);
+    }
+
+    void StartDash()
+    {
+        isDashing = true;
+        velocity.y = 0f;
     }
 }
